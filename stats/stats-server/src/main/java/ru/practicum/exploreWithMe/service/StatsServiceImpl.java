@@ -10,6 +10,7 @@ import ru.practicum.exploreWithMe.repository.StatsRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -25,17 +26,16 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
         if (unique) {
-            if (uris == null || uris.isEmpty()) {
+            if (Objects.isNull(uris) || uris.isEmpty()) {
                 return Mapper.convertToViewStatsDtoList(repository.getUniqueIpStatisticsForPeriod(start, end));
-            } else {
-                return Mapper.convertToViewStatsDtoList(repository.getUniqueIpStatisticsForPeriodAndUris(start, end, uris));
             }
-        } else {
-            if (uris == null || uris.isEmpty()) {
-                return Mapper.convertToViewStatsDtoList(repository.getStatisticsForPeriod(start, end));
-            } else {
-                return Mapper.convertToViewStatsDtoList(repository.getStatisticsForPeriodAndUris(start, end, uris));
-            }
+            return Mapper.convertToViewStatsDtoList(repository.getUniqueIpStatisticsForPeriodAndUris(start, end, uris));
         }
+        if (Objects.isNull(uris) || uris.isEmpty()) {
+            return Mapper.convertToViewStatsDtoList(repository.getStatisticsForPeriod(start, end));
+        }
+        return Mapper.convertToViewStatsDtoList(repository.getStatisticsForPeriodAndUris(start, end, uris));
     }
+
+
 }
