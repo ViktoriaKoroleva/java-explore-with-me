@@ -38,4 +38,5 @@ public class StatsClient extends BaseClient {
         String uri = uriComponents.toUriString();
         return get(uri);
     }
+
 }
