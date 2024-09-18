@@ -22,6 +22,7 @@ public class StatsClient extends BaseClient {
                 .requestFactory(() -> new HttpComponentsClientHttpRequestFactory())
                 .build());
     }
+
     public ResponseEntity<Object> addHit(EndpointHitDto hitDto) {
         return post("/hit", hitDto);
     }
