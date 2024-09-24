@@ -69,33 +69,33 @@ public class EventServiceImpl implements EventService {
     public EventFullDto updateEventAdmin(long eventId, UpdateEventAdminRequest updateEventAdminRequest) {
         Event event = eventRepository.findEventById(eventId);
 
-        if (updateEventAdminRequest.getAnnotation() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getAnnotation())) {
             event.setAnnotation(updateEventAdminRequest.getAnnotation());
         }
-        if (updateEventAdminRequest.getCategory() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getCategory())) {
             Category category = categoryRepository.findCategoryById(updateEventAdminRequest.getCategory());
             event.setCategory(category);
         }
-        if (updateEventAdminRequest.getDescription() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getDescription())) {
             event.setDescription(updateEventAdminRequest.getDescription());
         }
-        if (updateEventAdminRequest.getEventDate() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getEventDate())) {
             event.setEventDate(updateEventAdminRequest.getEventDate());
         }
-        if (updateEventAdminRequest.getLocation() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getLocation())) {
             event.setLat(updateEventAdminRequest.getLocation().getLat());
             event.setLon(updateEventAdminRequest.getLocation().getLon());
         }
-        if (updateEventAdminRequest.getPaid() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getPaid())) {
             event.setPaid(updateEventAdminRequest.getPaid());
         }
-        if (updateEventAdminRequest.getParticipantLimit() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getParticipantLimit())) {
             event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
         }
-        if (updateEventAdminRequest.getRequestModeration() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getRequestModeration())) {
             event.setRequestModeration(updateEventAdminRequest.getRequestModeration());
         }
-        if (updateEventAdminRequest.getTitle() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getTitle())) {
             event.setTitle(updateEventAdminRequest.getTitle());
         }
 
