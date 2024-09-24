@@ -1,22 +1,15 @@
 package ru.practicum.exploreWithMe.event.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.practicum.exploreWithMe.category.model.Category;
 import ru.practicum.exploreWithMe.category.repository.CategoryRepository;
-import ru.practicum.exploreWithMe.client.StatsClient;
-import ru.practicum.exploreWithMe.dto.EndpointHitDto;
 import ru.practicum.exploreWithMe.dto.ViewStatsDto;
 import ru.practicum.exploreWithMe.error.exceptions.BadRequestException;
 import ru.practicum.exploreWithMe.error.exceptions.ConflictException;
-import ru.practicum.exploreWithMe.error.exceptions.CustomJsonProcessingException;
 import ru.practicum.exploreWithMe.error.exceptions.NotFoundException;
 import ru.practicum.exploreWithMe.event.dto.*;
 import ru.practicum.exploreWithMe.event.mappers.EventMapper;
@@ -27,6 +20,7 @@ import ru.practicum.exploreWithMe.request.mapper.RequestMapper;
 import ru.practicum.exploreWithMe.request.model.Request;
 import ru.practicum.exploreWithMe.request.model.Status;
 import ru.practicum.exploreWithMe.request.repository.RequestRepository;
+import ru.practicum.exploreWithMe.stats.service.StatsService;
 import ru.practicum.exploreWithMe.user.model.User;
 import ru.practicum.exploreWithMe.user.repository.UserRepository;
 
@@ -41,7 +35,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
-    private final StatsClient statsClient;
+    private final StatsService statsService;
 
     @Override
     public List<EventFullDto> searchEventAdmin(List<Long> users,
@@ -75,33 +69,33 @@ public class EventServiceImpl implements EventService {
     public EventFullDto updateEventAdmin(long eventId, UpdateEventAdminRequest updateEventAdminRequest) {
         Event event = eventRepository.findEventById(eventId);
 
-        if (updateEventAdminRequest.getAnnotation() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getAnnotation())) {
             event.setAnnotation(updateEventAdminRequest.getAnnotation());
         }
-        if (updateEventAdminRequest.getCategory() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getCategory())) {
             Category category = categoryRepository.findCategoryById(updateEventAdminRequest.getCategory());
             event.setCategory(category);
         }
-        if (updateEventAdminRequest.getDescription() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getDescription())) {
             event.setDescription(updateEventAdminRequest.getDescription());
         }
-        if (updateEventAdminRequest.getEventDate() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getEventDate())) {
             event.setEventDate(updateEventAdminRequest.getEventDate());
         }
-        if (updateEventAdminRequest.getLocation() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getLocation())) {
             event.setLat(updateEventAdminRequest.getLocation().getLat());
             event.setLon(updateEventAdminRequest.getLocation().getLon());
         }
-        if (updateEventAdminRequest.getPaid() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getPaid())) {
             event.setPaid(updateEventAdminRequest.getPaid());
         }
-        if (updateEventAdminRequest.getParticipantLimit() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getParticipantLimit())) {
             event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
         }
-        if (updateEventAdminRequest.getRequestModeration() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getRequestModeration())) {
             event.setRequestModeration(updateEventAdminRequest.getRequestModeration());
         }
-        if (updateEventAdminRequest.getTitle() != null) {
+        if (Objects.nonNull(updateEventAdminRequest.getTitle())) {
             event.setTitle(updateEventAdminRequest.getTitle());
         }
 
@@ -328,14 +322,14 @@ public class EventServiceImpl implements EventService {
         List<Event> sortEventList = new ArrayList<>(events);
         sortEventList.sort(Comparator.comparing(Event::getPublishedOn));
 
-        List<ViewStatsDto> viewStats = getViewStats(start, end, eventUris);
+        List<ViewStatsDto> viewStats = statsService.getViewStats(sortEventList.get(0).getPublishedOn().minusSeconds(1), LocalDateTime.now(), eventUris);
 
         Map<String, Long> viewsMap = new HashMap<>();
         for (ViewStatsDto stat : viewStats) {
             viewsMap.put(stat.getUri(), stat.getHits());
         }
 
-        addHit(request);
+        statsService.addHit(request);
 
         List<EventShortDto> eventShortDtos = new ArrayList<>();
         for (Event event : events) {
@@ -361,9 +355,9 @@ public class EventServiceImpl implements EventService {
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new NotFoundException("Событие с id " + id + " не опубликовано.");
         }
-        addHit(request);
+        statsService.addHit(request);
 
-        List<ViewStatsDto> viewStats = getViewStats(event.getPublishedOn().minusSeconds(1), LocalDateTime.now(), List.of(request.getRequestURI()));
+        List<ViewStatsDto> viewStats = statsService.getViewStats(event.getPublishedOn().minusSeconds(1), LocalDateTime.now(), List.of(request.getRequestURI()));
 
         EventFullDto eventFullDto = EventMapper.toEventFullDto(eventRepository.save(event));
         if (!viewStats.isEmpty()) {
@@ -373,30 +367,5 @@ public class EventServiceImpl implements EventService {
         }
 
         return eventFullDto;
-    }
-
-    private void addHit(HttpServletRequest request) {
-        statsClient.addHit(new EndpointHitDto(
-                "main-service",
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                LocalDateTime.now()
-        ));
-    }
-
-    private List<ViewStatsDto> getViewStats(LocalDateTime start, LocalDateTime end, List<String> uris) {
-        ResponseEntity<Object> uriViewStats = statsClient.getStats(start, end, uris, true);
-        List<ViewStatsDto> viewStats = new ArrayList<>();
-        if (uriViewStats.getBody() != null) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            try {
-                String json = objectMapper.writeValueAsString(uriViewStats.getBody());
-                viewStats = objectMapper.readValue(json, new TypeReference<List<ViewStatsDto>>() {
-                });
-            } catch (JsonProcessingException e) {
-                throw new CustomJsonProcessingException("Error processing JSON");
-            }
-        }
-        return viewStats;
     }
 }

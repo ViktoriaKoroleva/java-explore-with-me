@@ -15,7 +15,6 @@ import ru.practicum.exploreWithMe.event.repository.EventRepository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -38,13 +37,13 @@ public class CompilationServiceImpl implements CompilationService {
     @Override
     public CompilationDto updateCompilation(long compId, UpdateCompilationDto updateCompilationDto) {
         Compilation oldCompilation = compilationRepository.findCompilationById(compId);
-        if (Objects.nonNull(updateCompilationDto.getPinned())) {
+        if (updateCompilationDto.getPinned() != null) {
             oldCompilation.setPinned(updateCompilationDto.getPinned());
         }
-        if (Objects.nonNull(updateCompilationDto.getTitle())) {
+        if (updateCompilationDto.getTitle() != null) {
             oldCompilation.setTitle(updateCompilationDto.getTitle());
         }
-        if (Objects.nonNull(updateCompilationDto.getEvents()) && !updateCompilationDto.getEvents().isEmpty()) {
+        if (updateCompilationDto.getEvents() != null && !updateCompilationDto.getEvents().isEmpty()) {
             List<Event> events = eventRepository.findAllById(updateCompilationDto.getEvents());
             oldCompilation.setEvents(events);
         }
