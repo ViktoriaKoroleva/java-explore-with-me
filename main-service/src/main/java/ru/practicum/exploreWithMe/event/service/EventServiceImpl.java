@@ -11,19 +11,9 @@ import ru.practicum.exploreWithMe.dto.ViewStatsDto;
 import ru.practicum.exploreWithMe.error.exceptions.BadRequestException;
 import ru.practicum.exploreWithMe.error.exceptions.ConflictException;
 import ru.practicum.exploreWithMe.error.exceptions.NotFoundException;
-import ru.practicum.exploreWithMe.event.dto.EventFullDto;
-import ru.practicum.exploreWithMe.event.dto.EventRequestStatusUpdateRequest;
-import ru.practicum.exploreWithMe.event.dto.EventRequestStatusUpdateResult;
-import ru.practicum.exploreWithMe.event.dto.EventShortDto;
-import ru.practicum.exploreWithMe.event.dto.NewEventDto;
-import ru.practicum.exploreWithMe.event.dto.UpdateEventAdminRequest;
-import ru.practicum.exploreWithMe.event.dto.UpdateEventUserRequest;
+import ru.practicum.exploreWithMe.event.dto.*;
 import ru.practicum.exploreWithMe.event.mappers.EventMapper;
-import ru.practicum.exploreWithMe.event.model.Event;
-import ru.practicum.exploreWithMe.event.model.EventRequestStatus;
-import ru.practicum.exploreWithMe.event.model.EventSort;
-import ru.practicum.exploreWithMe.event.model.State;
-import ru.practicum.exploreWithMe.event.model.StateAction;
+import ru.practicum.exploreWithMe.event.model.*;
 import ru.practicum.exploreWithMe.event.repository.EventRepository;
 import ru.practicum.exploreWithMe.request.dto.RequestDto;
 import ru.practicum.exploreWithMe.request.mapper.RequestMapper;
@@ -79,36 +69,35 @@ public class EventServiceImpl implements EventService {
     public EventFullDto updateEventAdmin(long eventId, UpdateEventAdminRequest updateEventAdminRequest) {
         Event event = eventRepository.findEventById(eventId);
 
-        if (Objects.nonNull(updateEventAdminRequest.getAnnotation())) {
+        if (updateEventAdminRequest.getAnnotation() != null) {
             event.setAnnotation(updateEventAdminRequest.getAnnotation());
         }
-        if (Objects.nonNull(updateEventAdminRequest.getCategory())) {
+        if (updateEventAdminRequest.getCategory() != null) {
             Category category = categoryRepository.findCategoryById(updateEventAdminRequest.getCategory());
             event.setCategory(category);
         }
-        if (Objects.nonNull(updateEventAdminRequest.getDescription())) {
+        if (updateEventAdminRequest.getDescription() != null) {
             event.setDescription(updateEventAdminRequest.getDescription());
         }
-        if (Objects.nonNull(updateEventAdminRequest.getEventDate())) {
+        if (updateEventAdminRequest.getEventDate() != null) {
             event.setEventDate(updateEventAdminRequest.getEventDate());
         }
-        if (Objects.nonNull(updateEventAdminRequest.getLocation())) {
+        if (updateEventAdminRequest.getLocation() != null) {
             event.setLat(updateEventAdminRequest.getLocation().getLat());
             event.setLon(updateEventAdminRequest.getLocation().getLon());
         }
-        if (Objects.nonNull(updateEventAdminRequest.getPaid())) {
+        if (updateEventAdminRequest.getPaid() != null) {
             event.setPaid(updateEventAdminRequest.getPaid());
         }
-        if (Objects.nonNull(updateEventAdminRequest.getParticipantLimit())) {
+        if (updateEventAdminRequest.getParticipantLimit() != null) {
             event.setParticipantLimit(updateEventAdminRequest.getParticipantLimit());
         }
-        if (Objects.nonNull(updateEventAdminRequest.getRequestModeration())) {
+        if (updateEventAdminRequest.getRequestModeration() != null) {
             event.setRequestModeration(updateEventAdminRequest.getRequestModeration());
         }
-        if (Objects.nonNull(updateEventAdminRequest.getTitle())) {
+        if (updateEventAdminRequest.getTitle() != null) {
             event.setTitle(updateEventAdminRequest.getTitle());
         }
-
 
         if (updateEventAdminRequest.getStateAction() != null) {
             if (event.getState().equals(State.PENDING)) {
